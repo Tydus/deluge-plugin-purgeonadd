@@ -47,21 +47,26 @@ from deluge.core.rpcserver import export
 from twisted.internet import reactor
 
 DEFAULT_PREFS = {
-    'max_seeds' : -1,
+    'max_space' : -1,
+    'max_space_unit' : 'GB',
     'filter' : 'func_ratio',
-    'count_exempt' : False
+    'count_exempt' : False,
 }
 
+'''
 def _get_ratio((i, t)): 
     return t.get_ratio()
 
 def _date_added((i, t)): 
     return -t.time_added 
+'''
 
 filter_funcs = { 
-    'func_ratio' : _get_ratio, 
-    'func_added' : lambda (i, t): -t.time_added 
+    'func_ratio' : lambda (i, t): t.get_ratio(),
+    'func_added' : lambda (i, t): -t.time_added,
 }
+
+units = dict(zip(['B','KB','MB','GB','TB','PB','EB'],range(7))
 
 live = True
 
@@ -73,18 +78,20 @@ class Core(CorePluginBase):
         self.torrent_states = deluge.configmanager.ConfigManager("purgeonaddstates.conf", {})
 
         eventmanager = component.get("EventManager")
-        eventmanager.register_event_handler("TorrentFinishedEvent", self.do_remove)
+        eventmanager.register_event_handler("TorrentAddedEvent", self.do_purge)
+        #eventmanager.register_event_handler("TorrentFinishedEvent", self.do_purge)
 
         # it appears that if the plugin is enabled on boot then it is called before the 
-        # torrents are properly loaded and so do_remove receives an empty list. So we must 
+        # torrents are properly loaded and so do_purge receives an empty list. So we must 
         # listen to SessionStarted for when deluge boots but we still have apply_now so that 
-        # if the plugin is enabled mid-program do_remove is still run
-        eventmanager.register_event_handler("SessionStartedEvent", self.do_remove)       
+        # if the plugin is enabled mid-program do_purge is still run
+        #eventmanager.register_event_handler("SessionStartedEvent", self.do_purge)       
 
     def disable(self):
         eventmanager = component.get("EventManager")
-        eventmanager.deregister_event_handler("TorrentFinishedEvent", self.do_remove)
-        eventmanager.deregister_event_handler("SessionStartedEvent", self.do_remove)
+        eventmanager.deregister_event_handler("TorrentAddedEvent", self.do_purge)
+        #eventmanager.deregister_event_handler("TorrentFinishedEvent", self.do_purge)
+        #eventmanager.deregister_event_handler("SessionStartedEvent", self.do_purge)
 
     def update(self):
         # why does update only seem to get called when the plugin is enabled in this session ??
@@ -96,7 +103,7 @@ class Core(CorePluginBase):
         for key in config.keys():
             self.config[key] = config[key]
         self.config.save()
-        self.do_remove()
+        #self.do_purge()
 
     @export
     def get_config(self):
@@ -129,75 +136,59 @@ class Core(CorePluginBase):
 
         self.torrent_states.save()
 
-    # we don't use args or kwargs it just allows callbacks to happen cleanly
-    def do_remove(self, *args, **kwargs): 
-        log.debug("PurgeOnAdd: do_remove")
-
-        max_seeds = self.config['max_seeds'] 
-        count_exempt = self.config['count_exempt']
-
-        # Negative max means unlimited seeds are allowed, so don't do anything
-        if max_seeds < 0: 
-            return 
+    def do_purge(self, torrent_id):
+        log.debug("PurgeOnAdd: do_purge")
 
         torrentmanager = component.get("TorrentManager")
-        torrent_ids = torrentmanager.get_torrent_list()
+        #torrent_ids = torrentmanager.get_torrent_list()
 
-        # If there are less torrents present than we allow then there can be nothing to do 
-        if len(torrent_ids) <= max_seeds: 
-            return 
-        
-        torrents = []
-        ignored_torrents = []
 
-        # relevant torrents to us exist and are finished 
-        for i in torrent_ids: 
-            t = torrentmanager.torrents.get(i, None)
+        # torrentmanager.torrents is a dict
+        new_torrent = torrentmanager.torrents[torrent_id]
 
-            try:
-                finished = t.is_finished
-            except: 
-                continue
-            else: 
-                if not finished: 
-                    continue
+        if new_torrent.isfinished:
+            log.debug("PurgeOnAdd: the new torrent is finished")
+            return
 
-            try: 
-                ignored = self.torrent_states[i]
-            except KeyError:
-                ignored = False
+        extra_space_needed = (deluge.common.free_path(new_torrent.save_path) -
+                              new_torrent.get_status(['total_wanted'])['total_wanted'])
+        if extra_space_needed <= 0:
+            # We have enough space for the new one
+            return
 
-            (ignored_torrents if ignored else torrents).append((i, t))
+        # Count up all tasks have the same download path with the new one
+        # FIXME: Don't use path, check if they are in the same partition
+        torrents_same_path=filter(
+            lambda (i,t):t.save_path==new_torrent.save_path,
+            torrentmanager.torrents.pairs()
+        )
 
-        # now that we have trimmed active torrents check again to make sure we still need to proceed
-        if len(torrents) + (len(ignored_torrents) if count_exempt else 0) <= max_seeds: 
-            return 
-
-        # if we are counting ignored torrents towards our maximum then these have to come off the top of our allowance
-        if count_exempt: 
-            max_seeds -= len(ignored_torrents)
-            if max_seeds < 0: max_seeds = 0 
-        
-        # sort it according to our chosen method 
-        torrents.sort(key = filter_funcs.get(self.config['filter'], _get_ratio), reverse = False)
+        # Sort it according to our chosen method 
+        torrents_same_path.sort(key = filter_funcs.get(self.config['filter'], _get_ratio), reverse = False)
 
         changed = False
-        # remove these torrents
-        for i, t in torrents[max_seeds:]: 
-            log.debug("PurgeOnAdd: Remove torrent %s, %s" % (i, t.get_status(['name'])['name']))
-            if live: 
-                try:
-                    torrentmanager.remove(i, remove_data = False)
-                except Exception, e: 
-                    log.warn("PurgeOnAdd: Problems removing torrent: %s", e)
+        # Remove the tasks until enough to make way of the new one
+        for i, t in torrents_same_path:
+            s = t.get_status(['name','total_done'])
+            log.debug("PurgeOnAdd: Remove torrent %s, %s" % (i, s['name']))
+            try:
+                torrentmanager.remove(i, remove_data = True)
+            except Exception, e: 
+                log.warn("PurgeOnAdd: Problems removing torrent: %s", e)
 
-                try: 
-                    del self.torrent_states.config[i] 
-                except KeyError: 
-                    pass
-                else: 
-                    changed = True
+            try: 
+                del self.torrent_states.config[i] 
+            except KeyError: 
+                pass
+            else: 
+                changed = True
 
-        if changed: 
+            # Count up the space saved
+            extra_space_needed-=s['total_done']
+            if extra_space_needed<=0:
+                # We are done
+                break
+
+        if changed:
             self.torrent_states.save()
          
