@@ -1,8 +1,0 @@
-
-    [deluge.plugin.core]
-    PurgeOnAdd = purgeonadd:CorePlugin
-    [deluge.plugin.gtkui]
-    PurgeOnAdd = purgeonadd:GtkUIPlugin
-    [deluge.plugin.web]
-    PurgeOnAdd = purgeonadd:WebUIPlugin
-    
