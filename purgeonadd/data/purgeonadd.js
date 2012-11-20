@@ -1,8 +1,9 @@
 /*
-Script: autoremove.js
-    The client-side javascript code for the AutoRemove plugin.
+Script: purgeonadd.js
+    The client-side javascript code for the PurgeOnAdd plugin.
 
 Copyright:
+    (C) Tydus Ken 2012 <Tydus@Tydus.org>
     (C) Jamie Lennox 2011 <jamielennox@gmail.com>
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -31,12 +32,12 @@ Copyright:
     statement from all source files in the program, then also delete it here.
 */
 
-AutoRemovePlugin = Ext.extend(Deluge.Plugin, {
+PurgeOnAddPlugin = Ext.extend(Deluge.Plugin, {
 	constructor: function(config) {
 		config = Ext.apply({
-			name: "AutoRemove"
+			name: "PurgeOnAdd"
 		}, config);
-		AutoRemovePlugin.superclass.constructor.call(this, config);
+		PurgeOnAddPlugin.superclass.constructor.call(this, config);
 	},
 
 	onDisable: function() {
@@ -47,4 +48,4 @@ AutoRemovePlugin = Ext.extend(Deluge.Plugin, {
 
 	}
 });
-new AutoRemovePlugin();
+new PurgeOnAddPlugin();

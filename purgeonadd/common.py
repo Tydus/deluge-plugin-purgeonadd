@@ -40,4 +40,4 @@
 
 def get_resource(filename):
     import pkg_resources, os
-    return pkg_resources.resource_filename("autoremove", os.path.join("data", filename))
+    return pkg_resources.resource_filename("purgeonadd", os.path.join("data", filename))

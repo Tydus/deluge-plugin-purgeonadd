@@ -47,7 +47,7 @@ from common import get_resource
 
 class WebUI(WebPluginBase):
 
-    scripts = [get_resource("autoremove.js")]
+    scripts = [get_resource("purgeonadd.js")]
 
     def enable(self):
         pass

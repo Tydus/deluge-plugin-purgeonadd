@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: PurgeOnAdd
+Version: 0.1
+Summary: Auto purge tasks while add torrent 
+Home-page: UNKNOWN
+Author: Tydus Ken
+Author-email: Tydus@Tydus.org
+License: GPLv3
+Description: Auto purge tasks when no space left on the device while add torrent.
+Platform: UNKNOWN

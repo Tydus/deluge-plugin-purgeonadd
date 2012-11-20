@@ -68,9 +68,9 @@ live = True
 class Core(CorePluginBase):
 
     def enable(self):
-        log.debug ("AutoRemove: Enabled")
-        self.config = deluge.configmanager.ConfigManager("autoremove.conf", DEFAULT_PREFS)
-        self.torrent_states = deluge.configmanager.ConfigManager("autoremovestates.conf", {})
+        log.debug ("PurgeOnAdd: Enabled")
+        self.config = deluge.configmanager.ConfigManager("purgeonadd.conf", DEFAULT_PREFS)
+        self.torrent_states = deluge.configmanager.ConfigManager("purgeonaddstates.conf", {})
 
         eventmanager = component.get("EventManager")
         eventmanager.register_event_handler("TorrentFinishedEvent", self.do_remove)
@@ -119,7 +119,7 @@ class Core(CorePluginBase):
 
     @export 
     def set_ignore(self, torrent_ids, ignore = True): 
-        log.debug ("AutoRemove: Setting torrents %s to ignore=%s" % (torrent_ids, ignore))
+        log.debug ("PurgeOnAdd: Setting torrents %s to ignore=%s" % (torrent_ids, ignore))
 
         if not hasattr(torrent_ids, '__iter__'): 
             torrent_ids = [torrent_ids] 
@@ -131,7 +131,7 @@ class Core(CorePluginBase):
 
     # we don't use args or kwargs it just allows callbacks to happen cleanly
     def do_remove(self, *args, **kwargs): 
-        log.debug("AutoRemove: do_remove")
+        log.debug("PurgeOnAdd: do_remove")
 
         max_seeds = self.config['max_seeds'] 
         count_exempt = self.config['count_exempt']
@@ -184,12 +184,12 @@ class Core(CorePluginBase):
         changed = False
         # remove these torrents
         for i, t in torrents[max_seeds:]: 
-            log.debug("AutoRemove: Remove torrent %s, %s" % (i, t.get_status(['name'])['name']))
+            log.debug("PurgeOnAdd: Remove torrent %s, %s" % (i, t.get_status(['name'])['name']))
             if live: 
                 try:
                     torrentmanager.remove(i, remove_data = False)
                 except Exception, e: 
-                    log.warn("AutoRemove: Problems removing torrent: %s", e)
+                    log.warn("PurgeOnAdd: Problems removing torrent: %s", e)
 
                 try: 
                     del self.torrent_states.config[i] 
