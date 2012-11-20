@@ -27,7 +27,7 @@
                     <child>
                       <widget class="GtkLabel" id="label2">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Maximum Seeds</property>
+                        <property name="label" translatable="yes">Maximum Disk Usage</property>
                       </widget>
                       <packing>
                         <property name="x_options">GTK_FILL</property>
@@ -37,7 +37,7 @@
                     <child>
                       <widget class="GtkLabel" id="label4">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Remove by:</property>
+                        <property name="label" translatable="yes">Remove by</property>
                       </widget>
                       <packing>
                         <property name="top_attach">1</property>
@@ -71,30 +71,48 @@
                             <property name="numeric">True</property>
                           </widget>
                           <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">False</property>
+                            <property name="expand">True</property>
+                            <property name="fill">True</property>
                             <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <widget class="GtkComboBoxText" id="cbo_unit">
+                            <property name="visible">True</property>
+                            <property name="entry_text_column">0</property>
+                            <property name="id_column">1</property>
+                            <items>
+                              <item translatable="yes">B</item>
+                              <item translatable="yes">KB</item>
+                              <item translatable="yes">MB</item>
+                              <item translatable="yes">GB</item>
+                              <item translatable="yes">TB</item>
+                              <item translatable="yes">PB</item>
+                              <item translatable="yes">EB</item>
+                            </items>
+                          </widget>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
                           </packing>
                         </child>
                         <child>
                           <widget class="GtkLabel" id="label3">
                             <property name="visible">True</property>
-                            <property name="label" translatable="yes">(-1 for infinite)</property>
+                            <property name="label" translatable="yes">(-1 for unlimited)</property>
                           </widget>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">False</property>
-                            <property name="position">1</property>
+                            <property name="position">2</property>
                           </packing>
-                        </child>
-                        <child>
-                          <placeholder/>
                         </child>
                       </widget>
                       <packing>
                         <property name="left_attach">1</property>
                         <property name="right_attach">2</property>
-                        <property name="y_options"></property>
+                        <property name="y_options"/>
                       </packing>
                     </child>
                     <child>
