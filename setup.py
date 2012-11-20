@@ -1,6 +1,7 @@
 #
 # setup.py
 #
+# Copyright (C) 2012 Tydus Ken <Tydus@Tydus.org>
 # Copyright (C) 2011 Jamie Lennox <jamielennox@gmail.com>
 #
 # Basic plugin template created by:
@@ -40,13 +41,14 @@
 from setuptools import setup
 
 __plugin_name__ = "AutoRemove"
-__author__ = "Jamie Lennox"
-__author_email__ = "jamielennox@gmail.com"
-__version__ = "0.1"
+__author__ = "Tydus Ken"
+__author_email__ = "Tydus@Tydus.org"
+__version__ = "0.2"
 __url__ = ""
 __license__ = "GPLv3"
-__description__ = ""
-__long_description__ = """"""
+__description__ = "Auto remove outdated torrents"
+__long_description__ = """Auto remove outdated torrents according to the rules.
+Help to reserver disk space for the new ones."""
 __pkg_data__ = {__plugin_name__.lower(): ["template/*", "data/*"]}
 
 setup(

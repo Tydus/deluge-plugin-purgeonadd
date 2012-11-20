@@ -1,6 +1,7 @@
 #
 # gtkui.py
 #
+# Copyright (C) 2012 Tydus Ken <Tydus@Tydus.org>
 # Copyright (C) 2011 Jamie Lennox <jamielennox@gmail.com>
 #
 # Basic plugin template created by:
